@@ -7,6 +7,7 @@ PAS is a simulator for visualization of the log of the auto-assignment algorithm
 - Open `index.html` in Google Chrome.
 - Drag a log file to the archive icon.
 - Hit the play button!
+
 ### Format of the Log File
 The log file is a JSON. A sample log is shown below. PAS currently assumes that the outmost array has already been sorted by timestamps.
 ```JSON
