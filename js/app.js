@@ -227,6 +227,13 @@ function update_markers_with_computed_record(record) {
     }
   }
 
+  for (var key in app_state.symbols.couriers) {
+    if (!record.couriers[key]) {
+      app_state.symbols.couriers[key].setMap(null);
+      delete app_state.symbols.couriers[key];
+    }
+  }
+
   for (var key in record.orders) {
     if (app_state.symbols.orders[key]) {
       app_state.symbols.orders[key].setPosition(record.orders[key].location);
@@ -241,6 +248,13 @@ function update_markers_with_computed_record(record) {
         draggable: false,
         map: app_state.map
       });
+    }
+  }
+
+  for (var key in app_state.symbols.orders) {
+    if (!record.orders[key]) {
+      app_state.symbols.orders[key].setMap(null);
+      delete app_state.symbols.orders[key];
     }
   }
 }
