@@ -93,6 +93,10 @@ function app_init() {
   app_state.data = data;
   app_state.speed = 10;
   app_state.interval_id = null;
+  app_state.symbols = {
+    'couriers': {},
+    'orders': {}
+  };
 }
 
 // Initialize the application states and other stuff according
@@ -108,10 +112,15 @@ function app_start_with_data(data) {
   app_state.slider.setValue(app_state.slider.getMinimum());
   app_state.slider.setStep(0.001);
 
-  app_state.symbols = {
-    'couriers': {},
-    'orders': {}
-  };
+  for (var key in app_state.symbols.couriers) {
+    app_state.symbols.couriers[key].setMap(null);
+    delete app_state.symbols.couriers[key];
+  }
+
+  for (var key in app_state.symbols.orders) {
+    app_state.symbols.orders[key].setMap(null);
+    delete app_state.symbols.orders[key];
+  }
 
   for (var key in data.records[0].couriers) {
     app_state.symbols.couriers[key] = courier_symbol_new(data.records[0].couriers[key].location);
