@@ -29,10 +29,13 @@ function main() {
   experiment();
 }
 
+// For testing, this function gets called after app_init() in
+// the main function.
 function experiment() {
   update_map_center_at('Shanghai');
 }
 
+// This function handles basic setup of the application.
 function app_init() {
 
   // Init application state.
@@ -92,6 +95,8 @@ function app_init() {
   app_state.interval_id = null;
 }
 
+// Initialize the application states and other stuff according
+// to the data loaded.
 function app_start_with_data(data) {
   console.log(data);
   app_state.data = data;
@@ -142,6 +147,8 @@ function update_map_center_at(city) {
   });
 }
 
+// Given a timestamp, either return the record of the exact time
+// or interpolate a result from the real data.
 function get_record_by_timestamp(timestamp) {
   var records = app_state.data.records;
   var min_t = records[0].timestamp;
@@ -238,10 +245,16 @@ function update_markers_with_computed_record(record) {
   }
 }
 
+// Handle frame update.
 function update_on_timeout() {
   var slider = app_state.slider;
-  if (slider.getValue() < slider.getMaximum()) {
-    slider.setValue(slider.getValue() + app_state.speed * 0.001);
+  if (app_state.play.isChecked()) {
+    if (slider.getValue() < slider.getMaximum()) {
+      slider.setValue(slider.getValue() + app_state.speed * 0.001);
+    } else {
+      app_state.play.setChecked(false);
+      app_state.play.dispatchEvent(goog.ui.Component.EventType.ACTION);
+    }
   }
 }
 
