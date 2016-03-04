@@ -1,5 +1,5 @@
 {
-  "__comments": "just a test.",
+  "__comments": "a test for emerging order",
   "city": "Los Angeles",
   "records": [
     {
@@ -24,13 +24,6 @@
           "location": {
             "lat": 34.014990,
             "lng": -118.461460
-          }
-        },
-
-        "O2": {
-          "location": {
-            "lat": 33.959845,
-            "lng": -118.291290
           }
         }
       }

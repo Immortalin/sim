@@ -13,16 +13,17 @@ goog.require('goog.events.FileDropHandler');
 goog.require('goog.async.Deferred');
 
 var app_state = {
-  map: null,
-  slider: null,
-  play: null,
-  load: null,
-  data: null,
-  symbols: null,
-  speed: 10,
-  interval_id: null
+  map: null, // a Google Map object.
+  slider: null, // a Google Closure slider object.
+  play: null, // a Google Closure toggle button.
+  load: null, // a Google Closure FileDropHandler object.
+  data: null, // the loaded log object.
+  symbols: null, // the symbols on the map.
+  speed: 10, // the playback speed multiplier.
+  interval_id: null // the id returned by window.setInterval().
 };
 
+// The entrance of the script.
 function main() {
   app_init();
   experiment();
@@ -202,12 +203,38 @@ function update_markers_with_computed_record(record) {
     return;
   }
 
-  for (var key in app_state.symbols.couriers) {
-    app_state.symbols.couriers[key].setPosition(record.couriers[key].location);
+  for (var key in record.couriers) {
+    if (app_state.symbols.couriers[key]) {
+      app_state.symbols.couriers[key].setPosition(record.couriers[key].location);
+    } else {
+      // Create a new symbol.
+      app_state.symbols.couriers[key] = new google.maps.Marker({
+        position: record.couriers[key].location,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6
+        },
+        draggable: false,
+        map: app_state.map
+      });
+    }
   }
 
-  for (var key in app_state.symbols.orders) {
-    app_state.symbols.orders[key].setPosition(record.orders[key].location);
+  for (var key in record.orders) {
+    if (app_state.symbols.orders[key]) {
+      app_state.symbols.orders[key].setPosition(record.orders[key].location);
+    } else {
+      // Create a new symbol.
+      app_state.symbols.orders[key] = new google.maps.Marker({
+        position: record.orders[key].location,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 6
+        },
+        draggable: false,
+        map: app_state.map
+      });
+    }
   }
 }
 
