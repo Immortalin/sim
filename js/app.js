@@ -114,27 +114,11 @@ function app_start_with_data(data) {
   };
 
   for (var key in data.records[0].couriers) {
-    app_state.symbols.couriers[key] = new google.maps.Marker({
-      position: data.records[0].couriers[key].location,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 6
-      },
-      draggable: false,
-      map: app_state.map
-    });
+    app_state.symbols.couriers[key] = courier_symbol_new(data.records[0].couriers[key].location);
   }
 
   for (var key in data.records[0].orders) {
-    app_state.symbols.orders[key] = new google.maps.Marker({
-      position: data.records[0].orders[key].location,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 6
-      },
-      draggable: false,
-      map: app_state.map
-    });
+    app_state.symbols.orders[key] = order_symbol_new(data.records[0].orders[key].location);
   }
 
   console.log(app_state);
@@ -215,15 +199,7 @@ function update_markers_with_computed_record(record) {
       app_state.symbols.couriers[key].setPosition(record.couriers[key].location);
     } else {
       // Create a new symbol.
-      app_state.symbols.couriers[key] = new google.maps.Marker({
-        position: record.couriers[key].location,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 6
-        },
-        draggable: false,
-        map: app_state.map
-      });
+      app_state.symbols.couriers[key] = courier_symbol_new(record.couriers[key].location);
     }
   }
 
@@ -239,15 +215,7 @@ function update_markers_with_computed_record(record) {
       app_state.symbols.orders[key].setPosition(record.orders[key].location);
     } else {
       // Create a new symbol.
-      app_state.symbols.orders[key] = new google.maps.Marker({
-        position: record.orders[key].location,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 6
-        },
-        draggable: false,
-        map: app_state.map
-      });
+      app_state.symbols.orders[key] = order_symbol_new(record.orders[key].location);
     }
   }
 
@@ -257,6 +225,30 @@ function update_markers_with_computed_record(record) {
       delete app_state.symbols.orders[key];
     }
   }
+}
+
+function courier_symbol_new(position) {
+  return new google.maps.Marker({
+    position: position,
+    icon: {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 6
+    },
+    draggable: false,
+    map: app_state.map
+  });
+}
+
+function order_symbol_new(position) {
+  return new google.maps.Marker({
+    position: position,
+    icon: {
+      path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+      scale: 4
+    },
+    draggable: false,
+    map: app_state.map
+  });
 }
 
 // Handle frame update.
