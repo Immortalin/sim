@@ -1,0 +1,53 @@
+html, body {
+  position: relative;
+  height: 100%;
+}
+
+#map {
+  position: relative;
+  height: 100%;
+}
+
+#control-group {
+  position: relative;
+  width: 352px;
+  height: 32px;
+  bottom: 64px;
+  margin: auto;
+  padding: 0;
+  opacity: 0.6;
+}
+
+#play,
+#load {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+}
+
+#play {
+  left: 272px;
+  background-image: url("../assets/controls/play.png");
+}
+
+#load {
+  left: 320px;
+  background-image: url("../assets/controls/archive.png");
+}
+
+#slider {
+  position: absolute;
+  width: 256px;
+  height: 32px;
+  margin: 0;
+  background: ThreeDFace;
+}
+
+.goog-slider-thumb {
+  top: -10%;
+  width: 20px;
+  height: 120%;
+  position: absolute;
+  background: ThreeDShadow;
+
+}

@@ -3,13 +3,20 @@
   <head>
     <title>Purple Simulator</title>
 
-    <script src="/js/closure/goog/base.js" type="text/javascript" charset="utf-8"></script>
-    <script src="/js/app.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/closure/goog/base.js" type="text/javascript" charset="utf-8"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCEp8y758srDA5a5kXidB6rvBspmngjZcQ"></script>
+    <script src="js/app.js" type="text/javascript" charset="utf-8"></script>
 
-    <link rel="stylesheet" href="/css/app.css">
+    <link rel="stylesheet" href="css/app.css">
   </head>
 
-  <body>
+  <body onload="main()">
     <div id="map"></div>
+    <div id="control-group">
+      <div id="slider"></div>
+      <div id="play"></div>
+      <div id="load"></div>
+    </div>
+    
   </body>
 </html>

@@ -119,6 +119,10 @@ See the COPYING file for details.
     if (document.getElementById(textId)) {
       var value = document.getElementById(textId).value;
       window.console.log(value);
+
+      // Assume the input array is sorted by timestamp.
+      slider.setMinimum(data.record[0]);
+      slider.setMaximum(data.record[data.record.length - 1]);
       slider.setValue(new Number(value));
     }
   }
