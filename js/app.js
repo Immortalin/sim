@@ -20,7 +20,8 @@ var app_state = {
   data: null, // the loaded log object.
   symbols: null, // the symbols on the map.
   speed: 10, // the playback speed multiplier.
-  interval_id: null // the id returned by window.setInterval().
+  interval_id: null, // the id returned by window.setInterval().
+  current_record: null
 };
 
 // The entrance of the script.
@@ -59,6 +60,7 @@ function app_init() {
     var timestamp = app_state.slider.getValue();
 
     var record = get_record_by_timestamp(timestamp);
+    app_state.current_record = record;
     update_markers_with_computed_record(record);
   });
 
@@ -167,6 +169,9 @@ function get_record_by_timestamp(timestamp) {
                           (after.timestamp - before.timestamp);
 
   var retval = recursive_interp(before, after, interp_percentage);
+  console.log(before);
+  console.log(after);
+  console.log(retval);
   retval.timestamp = timestamp; // the timestamp in retval has been interpolated.
                                 // Use the exact number instead.
   return retval;
@@ -175,7 +180,7 @@ function get_record_by_timestamp(timestamp) {
 function recursive_interp(before, after, interp_percentage) {
   if (typeof before === 'number') {
     return before + interp_percentage * (after - before);
-  } else if (typeof before === 'array') {
+  } else if (before instanceof Array) {
     var retval = [];
     for (var i in before) {
       retval.push(recursive_interp(before[i], after[i], interp_percentage));
@@ -189,7 +194,7 @@ function recursive_interp(before, after, interp_percentage) {
     }
     return retval;
   } else {
-    return;
+    return before;
   }
 }
 
