@@ -57,16 +57,13 @@ function app_init() {
   slider.addEventListener(goog.ui.Component.EventType.CHANGE, function() {
     // The behevior when the slider slides.
     var timestamp = app_state.slider.getValue();
-    console.log(slider.getValue());
 
     var record = get_record_by_timestamp(timestamp);
     update_markers_with_computed_record(record);
-    console.log(record);
   });
 
   play.addEventListener(goog.ui.Component.EventType.ACTION, function(e) {
     // The behavior when the play button is toggled.
-    console.log(e.target.isChecked());
     if (e.target.isChecked()) {
       // Set animation frames.
       app_state.interval_id = setInterval(update_on_timeout, 1);
@@ -102,7 +99,6 @@ function app_init() {
 // Initialize the application states and other stuff according
 // to the data loaded.
 function app_start_with_data(data) {
-  console.log(data);
   app_state.data = data;
   update_map_center_at(data.city);
 
@@ -123,14 +119,13 @@ function app_start_with_data(data) {
   }
 
   for (var key in data.records[0].couriers) {
-    app_state.symbols.couriers[key] = courier_symbol_new(data.records[0].couriers[key].location);
+    app_state.symbols.couriers[key] = courier_symbol_new(key, data.records[0].couriers[key].location);
   }
 
   for (var key in data.records[0].orders) {
-    app_state.symbols.orders[key] = order_symbol_new(data.records[0].orders[key].location);
+    app_state.symbols.orders[key] = order_symbol_new(key, data.records[0].orders[key].location);
   }
 
-  console.log(app_state);
 }
 
 function update_map_center_at(city) {
@@ -208,7 +203,7 @@ function update_markers_with_computed_record(record) {
       app_state.symbols.couriers[key].setPosition(record.couriers[key].location);
     } else {
       // Create a new symbol.
-      app_state.symbols.couriers[key] = courier_symbol_new(record.couriers[key].location);
+      app_state.symbols.couriers[key] = courier_symbol_new(key, record.couriers[key].location);
     }
   }
 
@@ -224,7 +219,7 @@ function update_markers_with_computed_record(record) {
       app_state.symbols.orders[key].setPosition(record.orders[key].location);
     } else {
       // Create a new symbol.
-      app_state.symbols.orders[key] = order_symbol_new(record.orders[key].location);
+      app_state.symbols.orders[key] = order_symbol_new(key, record.orders[key].location);
     }
   }
 
@@ -236,8 +231,11 @@ function update_markers_with_computed_record(record) {
   }
 }
 
-function courier_symbol_new(position) {
-  return new google.maps.Marker({
+function courier_symbol_new(id, position) {
+
+  var retval = new google.maps.Marker({
+    courier_id: id,
+    info_window: null,
     position: position,
     icon: {
       path: google.maps.SymbolPath.CIRCLE,
@@ -246,10 +244,47 @@ function courier_symbol_new(position) {
     draggable: false,
     map: app_state.map
   });
+
+  retval.info_window = new google.maps.InfoWindow({
+    courier_id: id,
+    content: "",
+    opened: false
+  });
+
+  retval.info_window.addListener('position_changed', function() {
+    var domstring = '<table class="table">' +
+      '<caption>' + retval.courier_id + '</caption>' +
+      '<tbody>' + 
+      '<tr><td>' + 'Latitude' + '</td><td>' + retval.position.lat().toFixed(3) + '</td></tr>' + 
+      '<tr><td>' + 'Longitude' + '</td><td>' + retval.position.lng().toFixed(3) + '</td></tr>' + 
+      '</tbody>'
+      '</table>';
+
+    retval.info_window.setContent(domstring);
+  });
+
+  retval.info_window.addListener('closeclick', function() {
+    retval.info_window.close();
+    retval.info_window.opened = false;
+  });
+
+  retval.addListener('click', function() {
+    if (retval.info_window.opened) {
+      retval.info_window.close();
+      retval.info_window.opened = false;
+    } else {
+      retval.info_window.open(app_state.map, retval);
+      retval.info_window.opened = true;
+    }
+  });
+  return retval;
 }
 
-function order_symbol_new(position) {
-  return new google.maps.Marker({
+function order_symbol_new(id, position) {
+
+  var retval = new google.maps.Marker({
+    order_id: id,
+    info_window: null,
     position: position,
     icon: {
       path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
@@ -258,6 +293,40 @@ function order_symbol_new(position) {
     draggable: false,
     map: app_state.map
   });
+
+  retval.info_window = new google.maps.InfoWindow({
+    order_id: id,
+    content: "",
+    opened: false
+  });
+
+  retval.info_window.addListener('position_changed', function() {
+    var domstring = '<table class="table">' +
+      '<caption>' + retval.order_id + '</caption>' +
+      '<tbody>' + 
+      '<tr><td>' + 'Latitude' + '</td><td>' + retval.position.lat().toFixed(3) + '</td></tr>' + 
+      '<tr><td>' + 'Longitude' + '</td><td>' + retval.position.lng().toFixed(3) + '</td></tr>' + 
+      '</tbody>'
+      '</table>';
+
+    retval.info_window.setContent(domstring);
+  });
+
+  retval.info_window.addListener('closeclick', function() {
+    retval.info_window.close();
+    retval.info_window.opened = false;
+  });
+
+  retval.addListener('click', function() {
+    if (retval.info_window.opened) {
+      retval.info_window.close();
+      retval.info_window.opened = false;
+    } else {
+      retval.info_window.open(app_state.map, retval);
+      retval.info_window.opened = true;
+    }
+  });
+  return retval;
 }
 
 // Handle frame update.
