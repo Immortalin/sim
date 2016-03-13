@@ -147,7 +147,7 @@ function courier_route_polyline_new(id, record) {
       },
       offset: '100%'
     }],
-    map: app_state.map,
+    map: null,
     strokeColor: 'red'
   });
 
@@ -161,6 +161,14 @@ function courier_route_polyline_update(id, record) {
   });
 
   app_state.polylines[id].setPath(waypoints);
+}
+
+function courier_route_polyline_show(id) {
+  app_state.polylines[id].setMap(app_state.map);
+}
+
+function courier_route_polyline_hide(id) {
+  app_state.polylines[id].setMap(null);
 }
 
 function update_map_center_at(city) {
@@ -318,9 +326,11 @@ function courier_symbol_new(id, position) {
     if (retval.info_window.opened) {
       retval.info_window.close();
       retval.info_window.opened = false;
+      courier_route_polyline_hide(id);
     } else {
       retval.info_window.open(app_state.map, retval);
       retval.info_window.opened = true;
+      courier_route_polyline_show(id);
     }
   });
   return retval;
