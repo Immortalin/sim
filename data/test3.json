@@ -1,0 +1,128 @@
+{
+  "__comments": "just a test.",
+  "city": "Los Angeles",
+  "records": [
+    {
+      "timestamp": 1457026460,
+      "couriers": {
+        "C1": {
+          "location": {
+            "lat": 34.063270, 
+            "lng": -118.445280
+          },
+          "queue": [
+            "O1", "O2"
+          ]
+        },
+
+        "C2": {
+          "location": {
+            "lat": 34.065902, 
+            "lng": -118.373110
+          },
+          "queue": [
+          ]
+        }
+      },
+      "orders": {
+        "O1": {
+          "location": {
+            "lat": 34.014990,
+            "lng": -118.461460
+          },
+          "courier": "C1"
+        },
+
+        "O2": {
+          "location": {
+            "lat": 33.959845,
+            "lng": -118.291290
+          },
+          "courier": "C1"
+        }
+      }
+    },
+
+    {
+      "timestamp": 1457026470,
+      "couriers": {
+        "C1": {
+          "location": {
+            "lat": 34.065270, 
+            "lng": -118.445280
+          },
+          "queue": [
+            "O1", "O2"
+          ]
+        },
+
+        "C2": {
+          "location": {
+            "lat": 34.065902, 
+            "lng": -118.376110
+          },
+          "queue": [
+          ]
+        }
+      },
+      "orders": {
+        "O1": {
+          "location": {
+            "lat": 34.017990,
+            "lng": -118.469460
+          },
+          "courier": "C1"
+        },
+
+        "O2": {
+          "location": {
+            "lat": 33.950845,
+            "lng": -118.292290
+          },
+          "courier": "C1"
+        }
+      }
+    },
+
+    {
+      "timestamp": 1457026480,
+      "couriers": {
+        "C1": {
+          "location": {
+            "lat": 34.068270, 
+            "lng": -118.445280
+          },
+          "queue": [
+            "O1", "O2"
+          ]
+        },
+
+        "C2": {
+          "location": {
+            "lat": 34.061902, 
+            "lng": -118.374110
+          },
+          "queue": [
+          ]
+        }
+      },
+      "orders": {
+        "O1": {
+          "location": {
+            "lat": 34.010990,
+            "lng": -118.463460
+          },
+          "courier": "C1"
+        },
+
+        "O2": {
+          "location": {
+            "lat": 33.957845,
+            "lng": -118.295290
+          },
+          "courier": "C1"
+        }
+      }
+    }
+  ]
+}

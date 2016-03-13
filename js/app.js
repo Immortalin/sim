@@ -19,8 +19,10 @@ var app_state = {
   load: null, // a Google Closure FileDropHandler object.
   data: null, // the loaded log object.
   symbols: null, // the symbols on the map.
+  polylines: null, // the polylines (arrows) on the map.
   speed: 10, // the playback speed multiplier.
-  interval_id: null // the id returned by window.setInterval().
+  interval_id: null, // the id returned by window.setInterval().
+  current_record: null
 };
 
 // The entrance of the script.
@@ -59,6 +61,7 @@ function app_init() {
     var timestamp = app_state.slider.getValue();
 
     var record = get_record_by_timestamp(timestamp);
+    app_state.current_record = record;
     update_markers_with_computed_record(record);
   });
 
@@ -94,6 +97,7 @@ function app_init() {
     'couriers': {},
     'orders': {}
   };
+  app_state.polylines = {};
 }
 
 // Initialize the application states and other stuff according
@@ -120,12 +124,51 @@ function app_start_with_data(data) {
 
   for (var key in data.records[0].couriers) {
     app_state.symbols.couriers[key] = courier_symbol_new(key, data.records[0].couriers[key].location);
+    // app_state.polylines[key] = courier_route_polyline_new(key, data.records[0]);
   }
 
   for (var key in data.records[0].orders) {
     app_state.symbols.orders[key] = order_symbol_new(key, data.records[0].orders[key].location);
   }
 
+}
+
+function courier_route_polyline_new(id, record) {
+  var waypoints = [record.couriers[id].location];
+  record.couriers[id].queue.map(function(order_id) {
+    waypoints.push(record.orders[order_id].location);
+  });
+
+  var retval = new google.maps.Polyline({
+    path: waypoints,
+    icons: [{
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+      },
+      offset: '100%'
+    }],
+    map: null,
+    strokeColor: 'red'
+  });
+
+  return retval;
+}
+
+function courier_route_polyline_update(id, record) {
+  var waypoints = [record.couriers[id].location];
+  record.couriers[id].queue.map(function(order_id) {
+    waypoints.push(record.orders[order_id].location);
+  });
+
+  app_state.polylines[id].setPath(waypoints);
+}
+
+function courier_route_polyline_show(id) {
+  app_state.polylines[id].setMap(app_state.map);
+}
+
+function courier_route_polyline_hide(id) {
+  app_state.polylines[id].setMap(null);
 }
 
 function update_map_center_at(city) {
@@ -167,6 +210,9 @@ function get_record_by_timestamp(timestamp) {
                           (after.timestamp - before.timestamp);
 
   var retval = recursive_interp(before, after, interp_percentage);
+  console.log(before);
+  console.log(after);
+  console.log(retval);
   retval.timestamp = timestamp; // the timestamp in retval has been interpolated.
                                 // Use the exact number instead.
   return retval;
@@ -175,7 +221,7 @@ function get_record_by_timestamp(timestamp) {
 function recursive_interp(before, after, interp_percentage) {
   if (typeof before === 'number') {
     return before + interp_percentage * (after - before);
-  } else if (typeof before === 'array') {
+  } else if (before instanceof Array) {
     var retval = [];
     for (var i in before) {
       retval.push(recursive_interp(before[i], after[i], interp_percentage));
@@ -189,7 +235,7 @@ function recursive_interp(before, after, interp_percentage) {
     }
     return retval;
   } else {
-    return;
+    return before;
   }
 }
 
@@ -205,12 +251,20 @@ function update_markers_with_computed_record(record) {
       // Create a new symbol.
       app_state.symbols.couriers[key] = courier_symbol_new(key, record.couriers[key].location);
     }
+
+    if (app_state.polylines[key]) {
+      courier_route_polyline_update(key, record);
+    } else {
+      app_state.polylines[key] = courier_route_polyline_new(key, record);
+    }
   }
 
   for (var key in app_state.symbols.couriers) {
     if (!record.couriers[key]) {
       app_state.symbols.couriers[key].setMap(null);
       delete app_state.symbols.couriers[key];
+      app_state.polylines[key].setMap(null);
+      delete app_state.polylines[key];
     }
   }
 
@@ -252,7 +306,7 @@ function courier_symbol_new(id, position) {
   });
 
   retval.info_window.addListener('position_changed', function() {
-    var domstring = '<table class="table">' +
+    var domstring = '<table class="table table-hover">' +
       '<caption>' + retval.courier_id + '</caption>' +
       '<tbody>' + 
       '<tr><td>' + 'Latitude' + '</td><td>' + retval.position.lat().toFixed(3) + '</td></tr>' + 
@@ -272,9 +326,11 @@ function courier_symbol_new(id, position) {
     if (retval.info_window.opened) {
       retval.info_window.close();
       retval.info_window.opened = false;
+      courier_route_polyline_hide(id);
     } else {
       retval.info_window.open(app_state.map, retval);
       retval.info_window.opened = true;
+      courier_route_polyline_show(id);
     }
   });
   return retval;
@@ -301,7 +357,7 @@ function order_symbol_new(id, position) {
   });
 
   retval.info_window.addListener('position_changed', function() {
-    var domstring = '<table class="table">' +
+    var domstring = '<table class="table table-hover">' +
       '<caption>' + retval.order_id + '</caption>' +
       '<tbody>' + 
       '<tr><td>' + 'Latitude' + '</td><td>' + retval.position.lat().toFixed(3) + '</td></tr>' + 
