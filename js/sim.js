@@ -1,5 +1,35 @@
 const fs = require('fs');
 
+/** courier:
+  *   cid: string
+  *   lat: double
+  *   lng: double
+  *   connected: bool
+  *   zones: [int]
+  *   queue: [oid]
+  *
+  * order:
+  *   oid: string 
+  *   lat: double
+  *   lng: double
+  *   courier_id: cid
+  *   zone: int
+  *   gas_type: string
+  *   gallons: int
+  *   target_time_start: int
+  *   target_time_end: int
+  *   status: string
+  *   status_times: {string: int}
+  *
+  * event:
+  *   timestamp: int
+  *   type: string
+  *   cid: cid
+  *   oid: oid
+  *   courier: courier
+  *   order: order
+  */
+
 function main(argv) {
   if (argv.length < 3) {
     throw new Error('Wrong number of arguments');
@@ -25,7 +55,7 @@ function simulate(events) {
     var event = events.splice(0, 1)[0];
 
     if (event.timestamp > timestamp) {
-      log_state(couriers, orders, log);
+      log_state(timestamp, couriers, orders, log);
       timestamp = event.timestamp;
     }
 
@@ -34,7 +64,7 @@ function simulate(events) {
     switch (type) {
       case 'courier_appear': {
         var courier = event.courier;
-        var cid = evnet.cid;
+        var cid = event.cid;
         couriers[cid] = courier;
         auto_assign_call(couriers, orders, events);
         break;
@@ -59,11 +89,39 @@ function simulate(events) {
   }
 }
 
-function log_state(couriers, orders, log) {
-  // TODO: implement me.
+function log_state(timestamp, couriers, orders, log) {
+  var log_entry = {
+    timestamp: timestamp,
+    couriers: {},
+    orders: {}
+  };
+
+  for (var key in couriers) {
+    var courier = couriers[key];
+    log_entry.couriers['key'] = {
+      location: {
+        lat: courier.lat;
+        lng: courier.lng;
+      },
+      queue: courier.queue;
+    };
+  }
+
+  for (var key in orders) {
+    var order = orders[key];
+    log_entry.orders['key'] = {
+      location: {
+        lat: order.lat,
+        lng: order.lng
+      },
+      courier: order.courier_id
+    };
+  }
+
+  log.push(log_entry);
 }
 
-function order_appear(couriers, orders, events) {
+function auto_assign_call(couriers, orders, events) {
   // TODO: implement me.
 }
 
