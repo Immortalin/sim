@@ -55,7 +55,9 @@ function simulate(events) {
     var event = events.splice(0, 1)[0];
 
     if (event.timestamp > timestamp) {
-      log_state(timestamp, couriers, orders, log);
+      if (timestamp >= 0) {
+        log_state(timestamp, couriers, orders, log);
+      }
       timestamp = event.timestamp;
     }
 
