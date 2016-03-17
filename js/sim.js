@@ -9,7 +9,7 @@ const fs = require('fs');
   *   queue: [oid]
   *
   * order:
-  *   oid: string 
+  *   oid: string
   *   lat: double
   *   lng: double
   *   courier_id: cid
@@ -124,7 +124,50 @@ function log_state(timestamp, couriers, orders, log) {
 }
 
 function auto_assign_call(couriers, orders, events) {
-  // TODO: implement me.
+  var couriers_in = {};
+  var orders_in = {};
+
+  for (var key in couriers) {
+    var courier = couriers[key];
+    var courier_in = {
+      lat: courier.lat,
+      lng: courier.lng,
+      connected: courier.connected,
+      last_ping: 0,
+      zones: courier.zones
+    }
+
+    couriers_in[key] = courier_in;
+  }
+
+  for (var key in orders) {
+    var order = orders[key];
+    var order_in = {
+      lat: order.lat,
+      lng: order.lng,
+      id: order.oid,
+      courier_id: order.courier_id,
+      zone: order.zone,
+      gas_type: order.gas_type,
+      gallons: order.gallons,
+      target_time_start: order.target_time_start,
+      target_time_end: order.target_time_end,
+      status: order.status,
+      status_times: order.status_times,
+    }
+
+    orders_in[key] = order_in;
+  }
+
+  var input = {
+    orders: orders_in,
+    couriers: couriers_in,
+    human_time_format: false,
+    verbose_output: true
+  }
+
+  // TODO: call the auto assignment adapter to get output.
+  // TODO: process the output. adjust simulator states as needed.
 }
 
 main(process.argv);
