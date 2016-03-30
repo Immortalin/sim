@@ -1,5 +1,5 @@
 const fs = require('fs');
-
+const cp = require('child_process');
 /** courier:
   *   cid: string
   *   lat: double
@@ -166,8 +166,16 @@ function auto_assign_call(couriers, orders, events) {
     verbose_output: true
   }
 
-  // TODO: call the auto assignment adapter to get output.
+  var aa_result = auto_assignment_call(input);
   // TODO: process the output. adjust simulator states as needed.
+}
+
+function auto_assignment_call(input) {
+  var opt = {
+    input: JSON.stringify(input)
+  };
+
+  return JSON.parse(cp.execFileSync('java', ['-jar', 'aa.jar'], opt).toString());
 }
 
 main(process.argv);
