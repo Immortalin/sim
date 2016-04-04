@@ -20,7 +20,7 @@
       "oid": "O1",
       "lat": 34.063270,
       "lng": -118.445280,
-      "courier_id": null,
+      "courier_id": "",
       "courier_pos": -1,
       "zone": 1,
       "gas_type": "87",

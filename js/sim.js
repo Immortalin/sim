@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const cp = require('child_process');
+const df = require('dateformat');
 const sim_start_time = (new Date()).getTime();
 /** courier:
   *   cid: string
@@ -165,8 +166,8 @@ function auto_assign_call(couriers, orders, events) {
       zone: order.zone,
       gas_type: order.gas_type,
       gallons: order.gallons,
-      target_time_start: sim_start_time + order.target_time_start,
-      target_time_end: sim_start_time + order.target_time_end,
+      target_time_start: df(new Date(sim_start_time + order.target_time_start), 'yyyy-mm-dd HH:MM:ss') + ' PDT',
+      target_time_end: df(new Date(sim_start_time + order.target_time_end), 'yyyy-mm-dd HH:MM:ss') + ' PDT',
       status: order.status,
       status_times: order.status_times,
     }
