@@ -57,8 +57,8 @@ function simulate(events) {
 
   var timestamp = -1;
   while (events.length > 0) {
+    console.log(JSON.stringify(events));
     var event = events.splice(0, 1)[0];
-
     if (event.timestamp > timestamp) {
       if (timestamp >= 0) {
         log_state(timestamp, couriers, orders, log);
@@ -73,7 +73,7 @@ function simulate(events) {
         var courier = event.courier;
         var cid = event.cid;
         couriers[cid] = courier;
-        auto_assign_call(couriers, orders, events);
+        auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
 
@@ -93,7 +93,7 @@ function simulate(events) {
         var order = event.order;
         var oid = event.oid;
         orders[oid] = order;
-        auto_assign_call(couriers, orders, events);
+        auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
     }
@@ -138,7 +138,7 @@ function log_state(timestamp, couriers, orders, log) {
   log.push(log_entry);
 }
 
-function auto_assign_call(couriers, orders, events) {
+function auto_assign_call(couriers, orders, events, timestamp) {
   var couriers_in = {};
   var orders_in = {};
 
@@ -149,7 +149,6 @@ function auto_assign_call(couriers, orders, events) {
       lat: courier.lat,
       lng: courier.lng,
       connected: courier.connected,
-      last_ping: 0,
       zones: courier.zones
     }
 
@@ -176,6 +175,7 @@ function auto_assign_call(couriers, orders, events) {
   }
 
   var input = {
+    current_time: sim_start_time + timestamp,
     orders: orders_in,
     couriers: couriers_in,
     human_time_format: false,
@@ -183,7 +183,7 @@ function auto_assign_call(couriers, orders, events) {
   }
 
   var aa_result = auto_assignment_call(input);
-  
+  console.log(JSON.stringify(aa_result));
   // process the output. adjust simulator states as needed.
   for (var key in aa_result) {
     if (aa_result[key].new_assignment === true) {

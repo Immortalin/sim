@@ -26,7 +26,7 @@
       "gas_type": "87",
       "gallons": 10,
       "target_time_start": 1000,
-      "target_time_end": 3600000,
+      "target_time_end": 36000000,
       "status": "unassigned",
       "status_times": {}
     }
