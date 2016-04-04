@@ -1,5 +1,8 @@
+'use strict';
+
 const fs = require('fs');
 const cp = require('child_process');
+const sim_start_time = (new Date()).getTime();
 /** courier:
   *   cid: string
   *   lat: double
@@ -13,6 +16,7 @@ const cp = require('child_process');
   *   lat: double
   *   lng: double
   *   courier_id: cid
+  *   courier_pos: int
   *   zone: int
   *   gas_type: string
   *   gallons: int
@@ -77,6 +81,10 @@ function simulate(events) {
       }
 
       case 'courier_end_serving': {
+        var courier = couriers[event.cid];
+        var order = orders[event.oid];
+        courier.lat = order.lat;
+        courier.lng = order.lng;
         break;
       }
 
@@ -89,6 +97,12 @@ function simulate(events) {
       }
     }
   }
+
+  if (timestamp >= 0) {
+    log_state(timestamp, couriers, orders, log);
+  }
+
+  fs.writeFileSync('log.txt', JSON.stringify(log));
 }
 
 function log_state(timestamp, couriers, orders, log) {
@@ -102,10 +116,10 @@ function log_state(timestamp, couriers, orders, log) {
     var courier = couriers[key];
     log_entry.couriers['key'] = {
       location: {
-        lat: courier.lat;
-        lng: courier.lng;
+        lat: courier.lat,
+        lng: courier.lng
       },
-      queue: courier.queue;
+      queue: courier.queue
     };
   }
 
@@ -130,6 +144,7 @@ function auto_assign_call(couriers, orders, events) {
   for (var key in couriers) {
     var courier = couriers[key];
     var courier_in = {
+      id: courier.cid,
       lat: courier.lat,
       lng: courier.lng,
       connected: courier.connected,
@@ -150,8 +165,8 @@ function auto_assign_call(couriers, orders, events) {
       zone: order.zone,
       gas_type: order.gas_type,
       gallons: order.gallons,
-      target_time_start: order.target_time_start,
-      target_time_end: order.target_time_end,
+      target_time_start: sim_start_time + order.target_time_start,
+      target_time_end: sim_start_time + order.target_time_end,
       status: order.status,
       status_times: order.status_times,
     }
@@ -167,15 +182,49 @@ function auto_assign_call(couriers, orders, events) {
   }
 
   var aa_result = auto_assignment_call(input);
-  // TODO: process the output. adjust simulator states as needed.
+  
+  // process the output. adjust simulator states as needed.
+  for (var key in aa_result) {
+    if (aa_result[key].new_assignment === true) {
+      var order = orders[key];
+      var result = aa_result[key];
+      couriers[result.courier_id].queue.push(key);
+      order.courier_id = result.courier_id;
+      order.courier_pos = result.courier_pos;
+      order.status = 'assigned';
+      var event = {
+        timestamp: parseInt(result.etf) - sim_start_time,
+        type: 'courier_end_serving',
+        cid: result.courier_id,
+        oid: key,
+        courier: couriers[result.courier_id],
+        order: orders[key]
+      };
+
+      var i = 0;
+      for (; i < events.length; i++) {
+        if (events[i].timestamp > event.timestamp) {
+          break;
+        }
+      }
+      events.splice(i, 0, event);
+    }
+  }
+
+  for (var key in couriers) {
+    var queue = couriers[key].queue;
+    queue.sort(function(a, b) {
+      return orders[a].courier_pos - orders[b].courier_pos;
+    });
+  }
 }
 
 function auto_assignment_call(input) {
   var opt = {
     input: JSON.stringify(input)
   };
-
-  return JSON.parse(cp.execFileSync('java', ['-jar', 'aa.jar'], opt).toString());
+  console.log(JSON.stringify(input));
+  return JSON.parse(cp.execFileSync('java', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar', 'PurpleOptAdapter'], opt).toString());
 }
 
 main(process.argv);

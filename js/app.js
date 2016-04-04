@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 goog.require('goog.Promise');
 goog.require('goog.dom');
