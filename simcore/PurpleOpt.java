@@ -1548,13 +1548,22 @@ public class PurpleOpt {
 
 	static Long GetLongTimeFrom(HashMap<String,Object> hmap, String key) {
 		Object val = (Object) hmap.get(key);
-		try {
-			Long integerVal = ((Integer) val).longValue();
-			return integerVal;
-		}
-		catch (Exception e) {
-			Long longVal = SimpleDateFormatToUnixTime((String)val);
-			return longVal;
+		// try {
+		// 	Long integerVal = ((Long) val);
+		// 	return integerVal;
+		// }
+		// catch (Exception e) {
+		// 	Long longVal = SimpleDateFormatToUnixTime((String)val);
+		// 	return longVal;
+		// }
+		if (val instanceof Long) {
+			return (Long) val;
+		} else if (val instanceof Integer) {
+			return ((Integer) val).longValue();
+		} else if (val instanceof String) {
+			return SimpleDateFormatToUnixTime((String) val);
+		} else {
+			throw new IllegalArgumentException();
 		}
 	}
 
