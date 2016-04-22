@@ -40,6 +40,7 @@ function main(argv) {
     throw new Error('Wrong number of arguments');
   }
   var filename = argv[2];
+  cp.execFileSync('javac', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar', '../simcore/PurpleOpt.java', '../simcore/PurpleOptAdapter.java'], {});
   // console.log(fs.readFileSync(filename, 'utf-8'));
   var events = JSON.parse(fs.readFileSync(filename, 'utf-8'));
   simulate(events);
@@ -167,6 +168,8 @@ function auto_assign_call(couriers, orders, events, timestamp) {
       gallons: order.gallons,
       target_time_start: df(new Date(sim_start_time + order.target_time_start), 'yyyy-mm-dd HH:MM:ss') + ' PDT',
       target_time_end: df(new Date(sim_start_time + order.target_time_end), 'yyyy-mm-dd HH:MM:ss') + ' PDT',
+      // target_time_start: sim_start_time + order.target_time_start,
+      // target_time_end: sim_start_time + order.target_time_end,
       status: order.status,
       status_times: order.status_times,
     }
@@ -175,10 +178,11 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   }
 
   var input = {
-    current_time: sim_start_time + timestamp,
+    // current_time: sim_start_time + timestamp,
+    current_time: df(new Date(sim_start_time + timestamp), 'yyyy-mm-dd HH:MM:ss') + ' PDT',
     orders: orders_in,
     couriers: couriers_in,
-    human_time_format: false,
+    human_time_format: true,
     verbose_output: true
   }
 
