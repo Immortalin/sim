@@ -40,7 +40,7 @@ function main(argv) {
     throw new Error('Wrong number of arguments');
   }
   var filename = argv[2];
-  cp.execFileSync('javac', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar', '../simcore/PurpleOpt.java', '../simcore/PurpleOptAdapter.java'], {});
+  cp.execFileSync('javac', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar:../simcore/jackson-all-1.9.9.jar', '../simcore/PurpleOpt.java', '../simcore/PurpleOptAdapter.java'], {});
   // console.log(fs.readFileSync(filename, 'utf-8'));
   var events = JSON.parse(fs.readFileSync(filename, 'utf-8'));
   simulate(events);
@@ -58,7 +58,7 @@ function simulate(events) {
 
   var timestamp = -1;
   while (events.length > 0) {
-    console.log(JSON.stringify(events));
+    // console.log(JSON.stringify(events));
     var event = events.splice(0, 1)[0];
     if (event.timestamp > timestamp) {
       if (timestamp >= 0) {
@@ -103,11 +103,14 @@ function simulate(events) {
   if (timestamp >= 0) {
     log_state(timestamp, couriers, orders, log);
   }
-
-  fs.writeFileSync('log.txt', JSON.stringify(log));
+  fs.writeFileSync('log.json', JSON.stringify({
+    city: "los angeles",
+    records: log
+  }));
 }
 
 function log_state(timestamp, couriers, orders, log) {
+  console.log(JSON.stringify(couriers));
   var log_entry = {
     timestamp: timestamp,
     couriers: {},
@@ -116,7 +119,7 @@ function log_state(timestamp, couriers, orders, log) {
 
   for (var key in couriers) {
     var courier = couriers[key];
-    log_entry.couriers['key'] = {
+    log_entry.couriers[key] = {
       location: {
         lat: courier.lat,
         lng: courier.lng
@@ -127,7 +130,7 @@ function log_state(timestamp, couriers, orders, log) {
 
   for (var key in orders) {
     var order = orders[key];
-    log_entry.orders['key'] = {
+    log_entry.orders[key] = {
       location: {
         lat: order.lat,
         lng: order.lng
@@ -136,7 +139,7 @@ function log_state(timestamp, couriers, orders, log) {
     };
   }
 
-  log.push(log_entry);
+  log.push(JSON.parse(JSON.stringify(log_entry)));
 }
 
 function auto_assign_call(couriers, orders, events, timestamp) {
@@ -183,7 +186,8 @@ function auto_assign_call(couriers, orders, events, timestamp) {
     orders: orders_in,
     couriers: couriers_in,
     human_time_format: true,
-    verbose_output: true
+    verbose_output: true,
+    simulation_mode: true
   }
 
   var aa_result = auto_assignment_call(input);
@@ -198,7 +202,7 @@ function auto_assign_call(couriers, orders, events, timestamp) {
       order.courier_pos = result.courier_pos;
       order.status = 'assigned';
       var event = {
-        timestamp: parseInt(result.etf) - sim_start_time,
+        timestamp: (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime() - sim_start_time,
         type: 'courier_end_serving',
         cid: result.courier_id,
         oid: key,
@@ -229,7 +233,7 @@ function auto_assignment_call(input) {
     input: JSON.stringify(input)
   };
   console.log(JSON.stringify(input));
-  return JSON.parse(cp.execFileSync('java', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar', 'PurpleOptAdapter'], opt).toString());
+  return JSON.parse(cp.execFileSync('java', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar:../simcore/jackson-all-1.9.9.jar', 'PurpleOptAdapter'], opt).toString());
 }
 
 main(process.argv);

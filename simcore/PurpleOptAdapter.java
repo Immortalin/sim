@@ -10,6 +10,7 @@ import java.lang.StringBuffer;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.codehaus.jackson.map.*;
 
 public class PurpleOptAdapter {
   public static void main(String[] args) {
@@ -42,7 +43,7 @@ public class PurpleOptAdapter {
           new FileReader(
             new File(
               inputFileName))));
-        HashMap<String, Object> returnedResult = PurpleOpt.computeSuggestion(parsedJSON);
+        HashMap<String, Object> returnedResult = PurpleOpt.computeSuggestion(new ObjectMapper().readValue(new File(args[0]), HashMap.class));
         fw = new FileWriter("gout.json");
         fw.write(JSONObject.toJSONString(returnedResult));
         fw.close();
