@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 goog.require('goog.Promise');
 goog.require('goog.dom');
@@ -20,7 +20,7 @@ var app_state = {
   data: null, // the loaded log object.
   symbols: null, // the symbols on the map.
   polylines: null, // the polylines (arrows) on the map.
-  speed: 10, // the playback speed multiplier.
+  speed: 100000, // the playback speed multiplier.
   interval_id: null, // the id returned by window.setInterval().
   current_record: null
 };
@@ -390,7 +390,7 @@ function update_on_timeout() {
   var slider = app_state.slider;
   if (app_state.play.isChecked()) {
     if (slider.getValue() < slider.getMaximum()) {
-      slider.setValue(slider.getValue() + app_state.speed * 0.001);
+      slider.setValue(slider.getValue() + app_state.speed);
     } else {
       app_state.play.setChecked(false);
       app_state.play.dispatchEvent(goog.ui.Component.EventType.ACTION);
