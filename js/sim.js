@@ -1,20 +1,24 @@
 'use strict';
 
+// Require node packages.
 const fs = require('fs');
 const cp = require('child_process');
 const df = require('dateformat');
 const sim_start_time = (new Date()).getTime();
-/** courier:
+
+
+/** In-program structures
+  * courier:
   *   cid: string
   *   lat: double
   *   lng: double
-  *   last_update: double
+  *   last_update: double - the time of last update of the structure
   *   connected: bool
   *   zones: [int]
   *   queue: [oid]
-  *   latv: double
-  *   lngv: double
-  *   etf: double
+  *   latv: double - velocity vector
+  *   lngv: double - velocity vector
+  *   etf: double - estimate time to finish the courier's current task
   *
   * order:
   *   oid: string
@@ -62,12 +66,18 @@ function simulate(events) {
 
   var timestamp = -1;
   while (events.length > 0) {
-    // console.log(JSON.stringify(events));
+    
+    // Pop the first event out of the event queue.
     var event = events.splice(0, 1)[0];
+
+    // Avoid repetitive logging.
     if (event.timestamp > timestamp) {
+      // Avoid logging in the first iteration.
       if (timestamp >= 0) {
         log_state(timestamp, couriers, orders, log);
       }
+
+      // Update timestamp after logging.
       timestamp = event.timestamp;
     }
 
@@ -76,9 +86,13 @@ function simulate(events) {
     switch (type) {
       case 'courier_appear': {
         console.log('courier_appear at timestamp' + timestamp);
+
+        // Add the new courier to the courier array.
         var courier = event.courier;
         var cid = event.cid;
         couriers[cid] = courier;
+
+        // Call auto-assignment to react to the status change.
         auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
@@ -91,50 +105,46 @@ function simulate(events) {
       case 'courier_end_serving': {
         console.log('courier_end_serving at timestamp' + timestamp);
         console.log('event at timestamp' + event.timestamp);
+
+        // The courier should be updated to the order's location.
+        // The order should be labeled completed.
         var courier = couriers[event.cid];
         var order = orders[event.oid];
         courier.lat = order.lat;
         courier.lng = order.lng;
         courier.last_update = timestamp;
         order.status = 'completed';
+
+        // Call auto-assignment because we may have an extra free courier.
         auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
 
       case 'order_appear': {
         console.log('order_appear at timestamp' + timestamp);
+
+        // Add the new order to the orders array.
         var order = event.order;
         var oid = event.oid;
         orders[oid] = order;
+
+        // Call auto-assignment because we have a new order to optimize.
         auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
     }
   }
 
+  // Log the last event if it exists.
   if (timestamp >= 0) {
     log_state(timestamp, couriers, orders, log);
   }
+
+  // Write the log to file system.
   fs.writeFileSync('log.json', JSON.stringify({
     city: "los angeles",
     records: log
   }));
-}
-
-function update_status(timestamp, couriers, orders) {
-  for (var key in couriers) {
-    var courier = couriers[key];
-    console.log('before');
-    console.log(JSON.stringify(courier));
-    courier.lat = courier.lat + (timestamp - courier.last_update) * courier.latv;
-    courier.lng = courier.lng + (timestamp - courier.last_update) * courier.lngv;
-    courier.last_update = timestamp;
-    console.log('after');
-    console.log(JSON.stringify(courier));
-    if (courier.queue.length > 0) {
-      orders[courier.queue[0]].status = 'enroute';
-    }
-  }
 }
 
 function log_state(timestamp, couriers, orders, log) {
@@ -171,6 +181,9 @@ function log_state(timestamp, couriers, orders, log) {
   log.push(JSON.parse(JSON.stringify(log_entry)));
 }
 
+// The function that does the heavy-lifting - generate
+// input to auto-assignment, get response and update
+// courier and order status.
 function auto_assign_call(couriers, orders, events, timestamp) {
   var couriers_in = {};
   var orders_in = {};
@@ -224,15 +237,17 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   // process the output. adjust simulator states as needed.
   for (var key in aa_result) {
     if (aa_result[key].new_assignment === true) {
-      var order = orders[key];
-      var result = aa_result[key];
-      couriers[result.courier_id].queue.push(key);
+      var order = orders[key]; // the order object in this system.
+      var result = aa_result[key]; // the order object returned by auto-assignment.
+      couriers[result.courier_id].queue.push(key); // throw orders to queues and sorting will happen afterwards.
       order.courier_id = result.courier_id;
       order.courier_pos = result.courier_pos;
       order.status = 'assigned';
       order.etf = (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime();
       console.log((new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime());
       console.log(sim_start_time);
+
+      // Generate event for the end of serving of this order.
       var event = {
         timestamp: (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime() - sim_start_time,
         type: 'courier_end_serving',
@@ -242,6 +257,7 @@ function auto_assign_call(couriers, orders, events, timestamp) {
         order: orders[key]
       };
 
+      // Insert the event to appropriate index of the array.
       var i = 0;
       for (; i < events.length; i++) {
         if (events[i].timestamp > event.timestamp) {
@@ -253,6 +269,7 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   }
 
   for (var key in couriers) {
+    // For each courier, remove completed orders on its queue.
     var courier = couriers[key];
     var queue = couriers[key].queue;
     for (var i = 0; i < queue.length; i++) {
@@ -262,14 +279,17 @@ function auto_assign_call(couriers, orders, events, timestamp) {
       }
     }
 
+    // Sort the queue by courier_pos as promised before.
     queue.sort(function(a, b) {
       return orders[a].courier_pos - orders[b].courier_pos;
     });
 
+    // Update courier location.
     courier.lat = courier.lat + (timestamp - courier.last_update) * courier.latv;
     courier.lng = courier.lng + (timestamp - courier.last_update) * courier.lngv;
     courier.last_update = timestamp;
 
+    // Update courier moving direction and speed.
     if (queue.length > 0) {
       orders[queue[0]].status = 'enroute';
       couriers[key].etf = orders[queue[0]].etf;

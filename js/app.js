@@ -390,7 +390,7 @@ function update_on_timeout() {
   var slider = app_state.slider;
   if (app_state.play.isChecked()) {
     if (slider.getValue() < slider.getMaximum()) {
-      slider.setValue(slider.getValue() + app_state.speed);
+      slider.setValue(slider.getValue() + 0.0001 * (slider.getMaximum() - slider.getMinimum()));
     } else {
       app_state.play.setChecked(false);
       app_state.play.dispatchEvent(goog.ui.Component.EventType.ACTION);
