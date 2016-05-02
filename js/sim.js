@@ -8,9 +8,13 @@ const sim_start_time = (new Date()).getTime();
   *   cid: string
   *   lat: double
   *   lng: double
+  *   last_update: double
   *   connected: bool
   *   zones: [int]
   *   queue: [oid]
+  *   latv: double
+  *   lngv: double
+  *   etf: double
   *
   * order:
   *   oid: string
@@ -71,6 +75,7 @@ function simulate(events) {
 
     switch (type) {
       case 'courier_appear': {
+        console.log('courier_appear at timestamp' + timestamp);
         var courier = event.courier;
         var cid = event.cid;
         couriers[cid] = courier;
@@ -79,18 +84,25 @@ function simulate(events) {
       }
 
       case 'courier_start_serving': {
+        console.log('courier_appear at timestamp' + timestamp);
         break;
       }
 
       case 'courier_end_serving': {
+        console.log('courier_end_serving at timestamp' + timestamp);
+        console.log('event at timestamp' + event.timestamp);
         var courier = couriers[event.cid];
         var order = orders[event.oid];
         courier.lat = order.lat;
         courier.lng = order.lng;
+        courier.last_update = timestamp;
+        order.status = 'completed';
+        auto_assign_call(couriers, orders, events, timestamp);
         break;
       }
 
       case 'order_appear': {
+        console.log('order_appear at timestamp' + timestamp);
         var order = event.order;
         var oid = event.oid;
         orders[oid] = order;
@@ -109,8 +121,25 @@ function simulate(events) {
   }));
 }
 
+function update_status(timestamp, couriers, orders) {
+  for (var key in couriers) {
+    var courier = couriers[key];
+    console.log('before');
+    console.log(JSON.stringify(courier));
+    courier.lat = courier.lat + (timestamp - courier.last_update) * courier.latv;
+    courier.lng = courier.lng + (timestamp - courier.last_update) * courier.lngv;
+    courier.last_update = timestamp;
+    console.log('after');
+    console.log(JSON.stringify(courier));
+    if (courier.queue.length > 0) {
+      orders[courier.queue[0]].status = 'enroute';
+    }
+  }
+}
+
 function log_state(timestamp, couriers, orders, log) {
-  console.log(JSON.stringify(couriers));
+  // console.log(JSON.stringify(couriers));
+  console.log("loggging");
   var log_entry = {
     timestamp: timestamp,
     couriers: {},
@@ -201,6 +230,9 @@ function auto_assign_call(couriers, orders, events, timestamp) {
       order.courier_id = result.courier_id;
       order.courier_pos = result.courier_pos;
       order.status = 'assigned';
+      order.etf = (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime();
+      console.log((new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime());
+      console.log(sim_start_time);
       var event = {
         timestamp: (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime() - sim_start_time,
         type: 'courier_end_serving',
@@ -221,10 +253,32 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   }
 
   for (var key in couriers) {
+    var courier = couriers[key];
     var queue = couriers[key].queue;
+    for (var i = 0; i < queue.length; i++) {
+      if (orders[queue[i]].status === 'completed') {
+        console.log(queue[i]);
+        queue.splice(i, 1);
+      }
+    }
+
     queue.sort(function(a, b) {
       return orders[a].courier_pos - orders[b].courier_pos;
     });
+
+    courier.lat = courier.lat + (timestamp - courier.last_update) * courier.latv;
+    courier.lng = courier.lng + (timestamp - courier.last_update) * courier.lngv;
+    courier.last_update = timestamp;
+
+    if (queue.length > 0) {
+      orders[queue[0]].status = 'enroute';
+      couriers[key].etf = orders[queue[0]].etf;
+      couriers[key].latv = (orders[queue[0]].lat - couriers[key].lat) / (couriers[key].etf - sim_start_time - timestamp);
+      couriers[key].lngv = (orders[queue[0]].lng - couriers[key].lng) / (couriers[key].etf - sim_start_time - timestamp);
+    } else {
+      couriers[key].latv = 0;
+      couriers[key].lngv = 0;
+    }
   }
 }
 
