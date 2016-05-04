@@ -4,7 +4,7 @@
 const fs = require('fs');
 const cp = require('child_process');
 const df = require('dateformat');
-const sim_start_time = (new Date()).getTime();
+var sim_start_time = (new Date()).getTime();
 
 
 /** In-program structures
@@ -50,7 +50,15 @@ function main(argv) {
   var filename = argv[2];
   cp.execFileSync('javac', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar:../simcore/jackson-all-1.9.9.jar', '../simcore/PurpleOpt.java', '../simcore/PurpleOptAdapter.java'], {});
   // console.log(fs.readFileSync(filename, 'utf-8'));
-  var events = JSON.parse(fs.readFileSync(filename, 'utf-8'));
+  var input = JSON.parse(fs.readFileSync(filename, 'utf-8'));
+  var events = input.events;
+
+  // For real time simulation, we don't need to
+  // modify the starting time of the simulation.
+  if (input.real_time === true) {
+    sim_start_time = 0;
+  }
+
   simulate(events);
 }
 
