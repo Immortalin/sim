@@ -279,7 +279,7 @@ public class PurpleOpt {
 			if (order.get("etf") == null)
 				output_entry.put("etf", null);
 			else
-				output_entry.put("etf", getTimeOutputInRightFormat((Long) order.get("etf")));
+				output_entry.put("etf", getTimeOutputInRightFormat((Long) order.get("etf"), true));
 			output_entry.put("tag", order.get("tag"));
 		}
 	}
