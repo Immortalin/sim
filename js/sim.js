@@ -5,6 +5,7 @@ const fs = require('fs');
 const cp = require('child_process');
 const df = require('dateformat');
 var sim_start_time = (new Date()).getTime();
+var real_time = false;
 
 
 /** In-program structures
@@ -56,6 +57,8 @@ function main(argv) {
   // For real time simulation, we don't need to
   // modify the starting time of the simulation.
   if (input.real_time === true) {
+    console.log("real-time simulation");
+    real_time = true;
     sim_start_time = 0;
   }
 
@@ -241,7 +244,7 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   }
 
   var aa_result = auto_assignment_call(input);
-  console.log(JSON.stringify(aa_result));
+  // console.log(JSON.stringify(aa_result));
   // process the output. adjust simulator states as needed.
   for (var key in aa_result) {
     if (aa_result[key].new_assignment === true) {
@@ -251,13 +254,11 @@ function auto_assign_call(couriers, orders, events, timestamp) {
       order.courier_id = result.courier_id;
       order.courier_pos = result.courier_pos;
       order.status = 'assigned';
-      order.etf = (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime();
-      console.log((new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime());
-      console.log(sim_start_time);
+      order.etf = (new Date(result.etf)).getTime();
 
       // Generate event for the end of serving of this order.
       var event = {
-        timestamp: (new Date(df(new Date(), "dddd mmmm d yyyy ") + result.etf)).getTime() - sim_start_time,
+        timestamp: (new Date(result.etf)).getTime() - sim_start_time,
         type: 'courier_end_serving',
         cid: result.courier_id,
         oid: key,
@@ -282,7 +283,7 @@ function auto_assign_call(couriers, orders, events, timestamp) {
     var queue = couriers[key].queue;
     for (var i = 0; i < queue.length; i++) {
       if (orders[queue[i]].status === 'completed') {
-        console.log(queue[i]);
+        // console.log(queue[i]);
         queue.splice(i, 1);
       }
     }
@@ -314,7 +315,7 @@ function auto_assignment_call(input) {
   var opt = {
     input: JSON.stringify(input)
   };
-  console.log(JSON.stringify(input));
+  // console.log(JSON.stringify(input));
   return JSON.parse(cp.execFileSync('java', ['-cp', '../simcore:../simcore/json-simple-1.1.1.jar:../simcore/jackson-all-1.9.9.jar', 'PurpleOptAdapter'], opt).toString());
 }
 
