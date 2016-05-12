@@ -125,6 +125,13 @@ function simulate(events) {
         courier.lng = order.lng;
         courier.last_update = timestamp;
         order.status = 'completed';
+        order.courier_pos = -1;
+        courier.queue.splice(0, 1);
+
+        for (var i in courier.queue) {
+          var oid = courier.queue[i];
+          orders[oid].courier_pos -= 1;
+        }
 
         // Call auto-assignment because we may have an extra free courier.
         auto_assign_call(couriers, orders, events, timestamp);
@@ -242,9 +249,10 @@ function auto_assign_call(couriers, orders, events, timestamp) {
     verbose_output: true,
     simulation_mode: true
   }
-
+  console.log(JSON.stringify(input));
   var aa_result = auto_assignment_call(input);
-  // console.log(JSON.stringify(aa_result));
+  console.log(JSON.stringify(aa_result));
+
   // process the output. adjust simulator states as needed.
   for (var key in aa_result) {
     if (aa_result[key].new_assignment === true) {
@@ -278,20 +286,25 @@ function auto_assign_call(couriers, orders, events, timestamp) {
   }
 
   for (var key in couriers) {
-    // For each courier, remove completed orders on its queue.
+
     var courier = couriers[key];
     var queue = couriers[key].queue;
-    for (var i = 0; i < queue.length; i++) {
-      if (orders[queue[i]].status === 'completed') {
-        // console.log(queue[i]);
-        queue.splice(i, 1);
-      }
-    }
 
+    if (key === "yUQ751Y5sRfR01jQmyYa") {
+      console.log('queue before sort');
+      console.log(JSON.stringify(queue));
+    }
     // Sort the queue by courier_pos as promised before.
     queue.sort(function(a, b) {
+      console.log(orders[a].courier_pos);
+      console.log(orders[b].courier_pos);
       return orders[a].courier_pos - orders[b].courier_pos;
     });
+
+    if (key === "yUQ751Y5sRfR01jQmyYa") {
+      console.log('queue after sort');
+      console.log(JSON.stringify(queue));
+    }
 
     // Update courier location.
     courier.lat = courier.lat + (timestamp - courier.last_update) * courier.latv;

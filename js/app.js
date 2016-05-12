@@ -28,7 +28,7 @@ var app_state = {
 // The entrance of the script.
 function main() {
   app_init();
-  experiment();
+  // experiment();
 }
 
 // For testing, this function gets called after app_init() in
