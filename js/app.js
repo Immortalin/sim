@@ -293,8 +293,8 @@ function courier_symbol_new(id, position) {
     info_window: null,
     position: position,
     icon: {
-      path: google.maps.SymbolPath.CIRCLE,
-      scale: 6
+      path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
+      scale: 4
     },
     draggable: false,
     map: app_state.map
@@ -345,8 +345,8 @@ function order_symbol_new(id, position) {
     info_window: null,
     position: position,
     icon: {
-      path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
-      scale: 4
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 6
     },
     draggable: false,
     map: app_state.map
