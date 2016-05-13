@@ -256,6 +256,7 @@ function update_markers_with_computed_record(record) {
       courier_route_polyline_update(key, record);
     } else {
       app_state.polylines[key] = courier_route_polyline_new(key, record);
+      courier_route_polyline_show(key);
     }
   }
 
@@ -326,13 +327,14 @@ function courier_symbol_new(id, position) {
     if (retval.info_window.opened) {
       retval.info_window.close();
       retval.info_window.opened = false;
-      courier_route_polyline_hide(id);
+      // courier_route_polyline_hide(id);
     } else {
       retval.info_window.open(app_state.map, retval);
       retval.info_window.opened = true;
-      courier_route_polyline_show(id);
+      // courier_route_polyline_show(id);
     }
   });
+
   return retval;
 }
 
