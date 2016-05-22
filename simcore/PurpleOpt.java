@@ -947,6 +947,7 @@ public class PurpleOpt {
 		Double finish_lng = (Double)courier.get("lng");
 		// initialize finish_time to the specified startTime
 		Long finish_time = startTime;
+		Long serving_time = 0;
 
 		// check empty
 		if (! assigned_orders_keys.isEmpty()) { // if it has assigned orders
@@ -957,19 +958,26 @@ public class PurpleOpt {
 			Double order_lat = (Double) order.get("lat");
 			Double order_lng = (Double) order.get("lng");
 			
-			if (bCourierAtOrderSite(order,courier))
+			if (bCourierAtOrderSite(order,courier)) {
 				// TODO: when the courier is on-site, we should use the event-log time to determine the remaining servicing time
-				finish_time += iOrderServingTime(order) / 2;
-			else {
-				if(bCourierValidLocation(courier))
+				
+				serving_time = iOrderServingTime(order) / 2;
+				finish_time += serving_time
+
+			} else {
+				if(bCourierValidLocation(courier)) {
+					serving_time = iOrderServingTime(order);
 					finish_time += googleDistanceGetByHttp(finish_lat, finish_lng, order_lat, order_lng)
-					+ iOrderServingTime(order);
-				else
-					finish_time += iOrderServingTime(order) + not_connected_delay * 60;
+					+ serving_time;
+				} else {
+					serving_time = iOrderServingTime(order);
+					finish_time += serving_time + not_connected_delay * 60;
+				}
 			}
 
 			// update courier first order's etf and position
 			order.put("etf", finish_time);
+			order.put("serving_time", serving_time);
 			order.put("courier_pos", new Long(1L));
 			
 			// process the remaining assigned orders
@@ -987,16 +995,20 @@ public class PurpleOpt {
 				// check if two orders are nearby
 				if (bNearbyOrderLatLng(prev_order_lat,prev_order_lng,order_lat,order_lng)) {
 					// add a discounted servicing time, and skip traveling
-					finish_time += timeNearbyOrder(order);
+					serving_time = timeNearbyOrder(order);
+					finish_time += serving_time;
 				}
 				else {
 					// add both traveling and servicing times
-					finish_time += timeDistantOrder(order, prev_order_lat, prev_order_lng);
+					serving_time = timeDistantOrder(order, prev_order_lat, prev_order_lng);
+					finish_time += serving_time;
+
 				}
 
 				// tag the order with its assigned courier
 				// order.put("courier_id", (String)courier.get("id")); // commented out because the courier_id should be already there
 				order.put("etf", finish_time);
+				order.put("serving_time", serving_time);
 				order.put("courier_pos", new Long((long)(i+1)));
 			}
 			// update finish_lat / lng
